@@ -44,7 +44,7 @@ class Reader():
 
         training, testing, target_training, target_testing = train_test_split(text, target, test_size=0.3, random_state=1234)
 
-        
+        self.library = [training, testing, target_training, target_testing]
 
         self.training["ham"] = [training[i] for i in range(0, len(training)) if target_training[i] == 1]
         self.training["spam"] = [training[i] for i in range(0, len(training)) if target_training[i] == 0]

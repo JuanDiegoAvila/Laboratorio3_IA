@@ -81,17 +81,20 @@ class Modelo():
 
             spam_condicional *= ((get_spam + 1) / (self.spam_length + (1 * self.diferentes)))
             ham_condicional *= ((get_ham + 1) / (self.ham_length + (1 * self.diferentes)))
+        
 
-        nspam_condicional = spam_condicional / (spam_condicional + ham_condicional)
-        nham_condicional = ham_condicional / (spam_condicional + ham_condicional)
+        nspam_condicional = spam_condicional / (spam_condicional + ham_condicional) if spam_condicional + ham_condicional > 0 else 0
+        nham_condicional = ham_condicional / (spam_condicional + ham_condicional) if spam_condicional + ham_condicional > 0 else 0
 
         p_spam = self.probabilidad_spam * nspam_condicional
         p_ham = self.probabilidad_ham * nham_condicional
 
         if p_spam + p_ham == 0:
-            return 0
+            return [0, 0]
         else:
-            return (p_spam / (p_spam + p_ham))
+            prob_ham = (p_ham / (p_spam + p_ham))
+            prob_spam = (p_spam / (p_spam + p_ham))
+            return [prob_spam, prob_ham]
     
     def getWordCount(self, bag, word):
         count = 0
@@ -102,19 +105,25 @@ class Modelo():
 
     def predict(self, testing):
         solutions = []
+
         for key in ["spam", "ham"]:
             testing[key]
             for frase in testing[key]:
                 prob = self.naiveBayes(frase)
-                if prob > 0.5:
+                if prob[0] > 0.5:
                     #0 = spam; 1 = ham
                     solutions.append(0)
                 else:
                     solutions.append(1)
         return solutions
     
-
-
+    def predictFrase(self, frase):
+        prob = self.naiveBayes(frase)
+        if prob[0] > 0.5:
+            #0 = spam; 1 = ham
+            return [0, prob[0], prob[1]]
+        else:
+            return [1, prob[0], prob[1]]
 
 
             
