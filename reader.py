@@ -1,7 +1,6 @@
 import re
 import unicodedata
-from math import floor
-import random
+from sklearn.model_selection import train_test_split
 
 class Reader():
 
@@ -33,30 +32,23 @@ class Reader():
         return new
         
     def separacion(self):
-        
         self.completo = self.dictionary["ham"] + self.dictionary["spam"]
-        training = floor(len(self.completo) * 0.8)
-        validation = floor(len(self.completo) * 0.1)
-        testing = floor(len(self.completo) * 0.1)
+        text = []
+        target = []
+        for i in self.completo:
+            text.append(i)
+            if i in self.dictionary["ham"]:
+                target.append(1)
+            else:
+                target.append(0)
 
-        if training + validation + testing < len(self.completo):
-            training += len(self.completo) - (training + validation + testing)
+        training, testing, target_training, target_testing = train_test_split(text, target, test_size=0.3, random_state=1234)
 
-        for i in range(0, training):
-            random_temp = random.randint(0, len(self.completo) - 1)
-            key = "ham" if self.completo[random_temp] in self.dictionary["ham"] else "spam"
-            self.training[key].append(self.completo[random_temp])
-            self.completo.remove(self.completo[random_temp])
+        
 
-        for i in range(0, validation):
-            random_temp = random.randint(0, len(self.completo) - 1)
-            key = "ham" if self.completo[random_temp] in self.dictionary["ham"] else "spam"
-            self.validation[key].append(self.completo[random_temp])
-            self.completo.remove(self.completo[random_temp])
+        self.training["ham"] = [training[i] for i in range(0, len(training)) if target_training[i] == 1]
+        self.training["spam"] = [training[i] for i in range(0, len(training)) if target_training[i] == 0]
 
-        for i in range(0, testing):
-            random_temp = random.randint(0, len(self.completo) - 1)
-            key = "ham" if self.completo[random_temp] in self.dictionary["ham"] else "spam"
-            self.testing[key].append(self.completo[random_temp])
-            self.completo.remove(self.completo[random_temp])
+        self.testing["ham"] = [testing[i] for i in range(0, len(testing)) if target_testing[i] == 1]
+        self.testing["spam"] = [testing[i] for i in range(0, len(testing)) if target_testing[i] == 0]
 

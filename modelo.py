@@ -20,45 +20,56 @@ class Modelo():
         for i in list:
             words = i.split(" ")
             for j in words:
-                bag.append(j)
+                if j != '':
+                    bag.append(j)
         return bag
 
     # separa los mensajes de entrenamiento en ham y spam
     def separateProbabilities(self):
-        for i in self.training:
-            if i == 'ham':
-                self.ham = self.training[i]
-            else:
-                self.spam = self.training[i]
-        
+        self.ham = self.training["ham"]
+        self.spam = self.training["spam"]
+
         self.bagHam = self.getBagOfWords(self.ham)
         self.bagSpam = self.getBagOfWords(self.spam)
-        self.getProbabilities("ham", self.bagHam)
-        self.getProbabilities("spam", self.bagSpam)
+
+        self.spam_length = len(self.bagSpam)
+        self.ham_length = len(self.bagHam)
+
+        self.getProbabilities("ham", self.bagHam, self.ham_length)
+        self.getProbabilities("spam", self.bagSpam, self.spam_length)
+
+        self.total = dict(list(self.probabilities["spam"].items()) + list(self.probabilities["ham"].items()))
+        
+        palabras = []
+        for i in self.total:
+            if i not in palabras and i != '':
+                palabras.append(i)
+        self.diferentes = len(palabras)
+
     
-    # crea un diccionario con las probabilidades de cada palabra
-    def getProbabilities(self, type, bag):
+    # crea un diccionario con los conteos de cada palabra
+    def getProbabilities(self, type, bag, size):
         self.probabilities[type] = {}
         for i in bag:
             if i in self.probabilities[type]:
                 self.probabilities[type][i] += 1
             else:
                 self.probabilities[type][i] = 1
-        for i in self.probabilities[type]:
-            self.probabilities[type][i] = self.probabilities[type][i] / len(bag)
+        # for i in self.probabilities[type]:
+        #     self.probabilities[type][i] = self.probabilities[type][i] / size
+
+
+    def getElementLenght(self, element):
+        count = 0
+        for i in element:
+            for word in i.split(" "):
+                count += 1
+        return count
 
     # calcula la probabilidad de que un mensaje sea spam o ham        
     def naiveBayes(self, frase):
         self.probabilidad_spam = (len(self.spam) + 1) / ((len(self.spam) + len(self.ham))+1*2)
         self.probabilidad_ham = (len(self.ham) + 1) / ((len(self.spam) + len(self.ham))+1*2)
-
-        total = dict(list(self.probabilities["spam"].items()) + list(self.probabilities["ham"].items()))
-        palabras = []
-        for i in total:
-            if i not in palabras:
-                palabras.append(i)
-        diferentes = len(palabras)
-
 
         words = frase.split(" ")
         spam_condicional = 1
@@ -68,26 +79,40 @@ class Modelo():
             get_spam = self.probabilities["spam"].get(i,0)
             get_ham = self.probabilities["ham"].get(i,0)
 
-            spam_condicional *= ((get_spam + 1) / (len(self.bagSpam) + (1 * diferentes)))
-            ham_condicional *= ((get_ham + 1) / (len(self.bagHam) + (1 * diferentes)))
+            spam_condicional *= ((get_spam + 1) / (self.spam_length + (1 * self.diferentes)))
+            ham_condicional *= ((get_ham + 1) / (self.ham_length + (1 * self.diferentes)))
 
-        print('spam_condicional: ', spam_condicional)
-        print('ham_condicional: ', ham_condicional)
+        nspam_condicional = spam_condicional / (spam_condicional + ham_condicional)
+        nham_condicional = ham_condicional / (spam_condicional + ham_condicional)
 
-        p_spam = self.probabilidad_spam * spam_condicional
-        p_ham = self.probabilidad_ham * ham_condicional
+        p_spam = self.probabilidad_spam * nspam_condicional
+        p_ham = self.probabilidad_ham * nham_condicional
 
-        print('probabilidad_spam: ', p_spam)
-        print('probabilidad_ham: ', p_ham)
-        
-        es_spam = p_spam / (p_spam + p_ham)
-        es_ham = p_ham / (p_spam + p_ham)
-
-        if es_spam > es_ham:
-            return "spam"
+        if p_spam + p_ham == 0:
+            return 0
         else:
-            return "ham"
+            return (p_spam / (p_spam + p_ham))
+    
+    def getWordCount(self, bag, word):
+        count = 0
+        for i in bag:
+            if i == word:
+                count += 1
+        return count
 
+    def predict(self, testing):
+        solutions = []
+        for key in ["spam", "ham"]:
+            testing[key]
+            for frase in testing[key]:
+                prob = self.naiveBayes(frase)
+                if prob > 0.5:
+                    #0 = spam; 1 = ham
+                    solutions.append(0)
+                else:
+                    solutions.append(1)
+        return solutions
+    
 
 
 

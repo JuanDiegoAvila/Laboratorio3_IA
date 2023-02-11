@@ -1,15 +1,19 @@
 from reader import Reader 
 from modelo import Modelo
+from sklearn.metrics import accuracy_score
 
 reader = Reader('./entrenamiento.txt')
+
 modelo = Modelo(reader.training)
 
-#para que se suba a github
-
-for key in reader.testing:
+valores = []
+for key in ["spam", "ham"]:
     for frase in reader.testing[key]:
-        print(frase + ' ' + key)
-        prueba = Modelo.naiveBayes(modelo, frase)
-        print(prueba)
-        input()
-    
+        if key == "ham":
+            valores.append(1)
+        else:
+            valores.append(0)
+
+solutions = modelo.predict(reader.testing)
+
+print(accuracy_score(valores, solutions))
